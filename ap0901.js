@@ -4,8 +4,13 @@
 //
 "use strict"; // 厳格モード
 
+const seg =12;
+const gap = 0.01;
+
 // ライブラリをモジュールとして読み込む
 import * as THREE from "three";
+import {GLTFLoader} from "three/addons";
+import { OrbitControls } from 'three/addons';
 import { GUI } from "ili-gui";
 
 // ３Ｄページ作成関数の定義
@@ -29,18 +34,239 @@ function init() {
   // カメラの作成
   const camera = new THREE.PerspectiveCamera(
     50, window.innerWidth/window.innerHeight, 0.1, 1000);
-  camera.position.set(1,2,3);
-  camera.lookAt(0,0,0);
+    //camera.fov=200;
+  //camera.position.set(2,100,10);
+ // camera.lookAt(0,0,0);
 
   // レンダラの設定
   const renderer = new THREE.WebGLRenderer();
-  renderer.setSize(window.innerWidth, innerHeight);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x406080);
     document.getElementById("output").appendChild(renderer.domElement);
+//カメラコントロール
+ const orbitControls = new OrbitControls(camera,renderer.domElement);
+
+//平面の作成
+const planeGeometry = new THREE.PlaneGeometry(2000, 2000);
+  const planeMaterial = new THREE.MeshLambertMaterial({ color:0x90EE90});
+  const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+  plane.rotation.x = -0.5 * Math.PI;
+  plane.receiveShadow = true;
+  scene.add(plane)
+
+  let xwing; // モデルを格納する変数
+  function loadModel() { // モデル読み込み関数の定義
+    const loader = new GLTFLoader();
+    loader.load(
+      "xwing.glb",
+      (gltf)=>{
+        xwing = gltf.scene;
+        scene.add(xwing);
+        //render();
+        //setBackground();
+      }
+    );
+  }
+  loadModel(); // モデル読み込み実行
+// ビル
+function makeBuilding(x,z,type){
+  const height = [2,2,7,4,5];
+  const bldgH = height[type]*5;
+  const geometry = new THREE.BoxGeometry(8,bldgH,8);
+  
+
+  const material = new THREE.MeshLambertMaterial({color:0x808080});
+  const sideUvS = (type*2+1)/11;
+  const sideUvE = (type*2+2)/11;
+  const topUvS = (type*2+2)/11;
+  const topUvE = (type*2+3)/11;
+  const uvs = geometry.getAttribute("uv");
+  for(let i = 0;i<48;i+=4){
+      if(i<16 || i > 22){
+          uvs.array[i]=sideUvS;
+          uvs.array[i+2]=sideUvE;
+      }else{
+          uvs.array[i]=topUvS;
+          uvs.array[i+2]=topUvE;
+      }
+}
+  const bldg = new THREE.Mesh(
+      geometry,
+      material
+  )
+//  const bldg2 = new THREE.Mesh(
+
+ // )
+  bldg.position.set(x,bldgH/2,z);
+  scene.add(bldg)
+}
+makeBuilding(20,0,2);
+makeBuilding(-20,0,2);
+makeBuilding(0,20,0);
+//コースの制御点が何たらかんたら
+const controlPoints = [
+[25,7,40],
+  [25,7,-20],
+  [5,7,40],
+  [-20,7,-20],
+  [-50,7,40],
+  [-50,7,-20]
+];
+//コースの補完
+const p0 = new THREE.Vector3();
+  const p1 = new THREE.Vector3();
+  const course = new THREE.CatmullRomCurve3(
+    controlPoints.map((p,i) => {
+      p0.set(...p);
+      p1.set(...controlPoints[(i+1)%controlPoints.length]);
+      return [
+        (new THREE.Vector3()).copy(p0),
+        (new THREE.Vector3()).lerpVectors(p0,p1,1/3),
+        (new THREE.Vector3()).lerpVectors(p0,p1,2/3),
+      ];
+    }).flat(),true
+  )
+function makemetalRobot(){
+// メタルロボットの設定
+
+
+const metalRobot = new THREE.Group
+const metalMaterial = new THREE.MeshPhongMaterial(
+  {color: 0x707777, shininess: 60, specular: 0x222222 });
+const redMaterial = new THREE.MeshBasicMaterial({color: 0xc00000});
+const legRad = 0.5; // 脚の円柱の半径
+const legLen = 3; // 脚の円柱の長さ
+const legSep = 1.2; // 脚の間隔
+const bodyW = 3; // 胴体の幅
+const bodyH = 3; // 胴体の高さ
+const bodyD = 2; // 胴体の奥行
+const armRad = 0.4; // 腕の円柱の半径
+const armLen = 3.8; // 腕の円柱の長さ
+const headRad = 1.2; // 頭の半径
+const eyeRad = 0.2; // 目の半径
+const eyeSep = 0.8; // 目の間隔
+//  脚の作成
+const legGeometry
+  = new THREE.CylinderGeometry(legRad, legRad, legLen, seg, seg);
+const legR = new THREE.Mesh(legGeometry, metalMaterial);
+legR.position.set(-legSep/2, legLen/2, 0);
+metalRobot.add(legR);
+const legL = new THREE.Mesh(legGeometry,metalMaterial);
+legL.position.set(legSep/2,legLen/2,0);
+metalRobot.add(legL);
+//  胴体の作成
+const bodyGeometry = new THREE.BoxGeometry(bodyW - bodyD, bodyH, bodyD);
+const body = new THREE.Group;
+body.add(new THREE.Mesh(bodyGeometry,metalMaterial));
+const bodyL = new THREE.Mesh(
+  new THREE.CylinderGeometry(
+    bodyD/2, bodyD/2, bodyH, seg, 1, false, 0, Math.PI),
+  metalMaterial);
+bodyL.position.x = (bodyW - bodyD)/2;
+body.add(bodyL);
+const bodyR = new THREE.Mesh(
+  new THREE.CylinderGeometry(
+    bodyD/2, bodyD/2, bodyH, seg, 1, false, Math.PI,Math.PI),
+  metalMaterial);
+  bodyR.position.x = -(bodyW - bodyD)/2;
+  body.add(bodyR);
+const triangleGeometry = new THREE.BufferGeometry();
+const triangleVertices = new Float32Array( [
+0, 0, bodyD/2+gap,
+(bodyW - bodyD)/2, bodyH/2, bodyD/2+gap,
+-(bodyW - bodyD)/2, bodyH/2, bodyD/2+gap] );
+triangleGeometry.setAttribute( 'position',
+  new THREE.BufferAttribute( triangleVertices, 3));
+body.add(new THREE.Mesh(triangleGeometry, redMaterial));
+body.children.forEach((child) => {
+  child.castShadow = true;
+  child.receiveShadow = true;
+});
+  body.position.y = legLen + bodyH/2;
+  metalRobot.add(body);
+
+//  腕の作成
+const armGeometry
+= new THREE.CylinderGeometry(armRad, armRad, armLen, seg, 1);
+const armL = new THREE.Mesh(armGeometry, metalMaterial);
+armL.position.set(bodyW/2 + armRad, legLen + bodyH - armLen/2, 0);
+metalRobot.add(armL);
+const armR = new THREE.Mesh(armGeometry, metalMaterial);
+armR.position.set(-bodyW/2 - armRad, legLen + bodyH + -armLen/2, 0);
+metalRobot.add(armR);
+//  頭の作成
+const head = new THREE.Group;
+head.name = "head";
+const headGeometry = new THREE.SphereGeometry(headRad, seg, seg);
+head.add(new THREE.Mesh(headGeometry, metalMaterial));
+const circleGeometry = new THREE.CircleGeometry(eyeRad, seg);
+const eyeL = new THREE.Mesh(circleGeometry, redMaterial);
+eyeL.position.set(eyeSep/2+0.08, headRad/3, headRad-0.04);
+head.add(eyeL);
+const eyeR = new THREE.Mesh(circleGeometry, redMaterial);
+eyeR.position.set(-eyeSep/2-0.08, headRad/3, headRad-0.04);
+head.add(eyeR);
+const eyeS = new THREE.Mesh(circleGeometry,redMaterial);
+eyeS.name = "eyeS";
+eyeS.position.set((eyeR.x+eyeL.x)/2,headRad/3,headRad-0.05);
+head.add(eyeR);
+head.children.forEach((child) => {
+child.castShadow = true;
+child.receiveShadow = true;
+});
+head.position.y = legLen + bodyH + headRad;
+metalRobot.add(head);
+
+// 影についての設定
+metalRobot.children.forEach((child) => {
+child.castShadow = true;
+child.receiveShadow = true;
+});
+scene.add(metalRobot);
+
+const headPosition = metalRobot.getObjectByName("head").position.clone();
+camera.position.set(headPosition.x, headPosition.y, headPosition.z-0.1);
+camera.lookAt(headPosition);
+}
+const metalRobot = makemetalRobot();
+scene.add(metalRobot);
+ //光源の設定
+  
+  const light = new THREE.DirectionalLight(0xffffff,2);
+  light.position.set(3,6,8);
+  light.castShadow = true;
+  scene.add(light);
+  
+  window.addEventListener("resize", ()=>{
+    mainCamera.updateProjectionMatrix();
+    sizeR = 0.8 * window.innerWidth;
+    mainRenderer.setSize(sizeR, sizeR);
+    parts.forEach((part) => {
+      part.module.resize();
+    });
+  }, false);
+
+  
+
+
+
 
   // 描画処理
-
+const clock = new THREE.Clock();
+const xwingPosition = new THREE.Vector3();
+const xwingTarget = new THREE.Vector3();
   // 描画関数
   function render() {
+    //xwingの位置と向き
+    if(xwing){
+    const elapsedTime = clock.getElapsedTime()/30;
+    course.getPointAt(elapsedTime%1,xwingPosition);
+    xwing.position.copy(xwingPosition);
+    course.getPointAt((elapsedTime+0.01)%1,xwingTarget);
+    xwing.lookAt(xwingTarget);
+    }
+    // カメラ制御の更新
+    //orbitControls.update();
     // 座標軸の表示
     axes.visible = param.axes;
     // 描画
