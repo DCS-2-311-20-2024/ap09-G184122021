@@ -56,12 +56,14 @@ function init() {
 
 
  const textureLoader = new THREE.TextureLoader();
- const mapgazou = textureLoader.load("gazou.png");
+ const mapgazou = textureLoader.load("gazou2.jpeg");
+ //mapgazou.repeat.x = -1;
+ //mapgazou.offset.x = 1;
 //平面の作成
 const planeGeometry = new THREE.PlaneGeometry(200, 200);
-  const planeMaterial = new THREE.MeshLambertMaterial({ color:0x90EE90});
+  const planeMaterial = new THREE.MeshLambertMaterial();
   const plane = new THREE.Mesh(planeGeometry, planeMaterial);
- planeMaterial.map=mapgazou;
+  planeMaterial.map=mapgazou;
   plane.rotation.x = -0.5 * Math.PI;
   plane.receiveShadow = true;
   scene.add(plane)
@@ -314,7 +316,7 @@ const metalRobotTarget = new THREE.Vector3();
   // 描画関数
   function render() {
     if(metalRobot){
-      const speed = 0.18;
+      const speed = 0.25;
       const movement = new THREE.Vector3();
       if (keys.forward) movement.z += speed;
     if (keys.backward) movement.z -= speed;
