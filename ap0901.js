@@ -30,13 +30,21 @@ function init() {
   // 座標軸の設定
   const axes = new THREE.AxesHelper(18);
   scene.add(axes);
+  //WASDによるスピードの追加
+  //const speed = 0.02;
 
+  const keys = {
+    forward: false,
+    backward: false,
+    left: false,
+    right: false,
+  };
+
+  
   // カメラの作成
   const camera = new THREE.PerspectiveCamera(
     50, window.innerWidth/window.innerHeight, 0.1, 1000);
-    //camera.fov=200;
-  //camera.position.set(2,100,10);
- // camera.lookAt(0,0,0);
+    
 
   // レンダラの設定
   const renderer = new THREE.WebGLRenderer();
@@ -100,9 +108,18 @@ function makeBuilding(x,z,type){
   bldg.position.set(x,bldgH/2,z);
   scene.add(bldg)
 }
-makeBuilding(20,0,2);
-makeBuilding(-20,0,2);
-makeBuilding(0,20,0);
+//makeBuilding(20,0,2);
+//makeBuilding(-20,0,2);
+for(let i =-50;i<50;i=i+5){
+      if(i!=25||i!=30){
+      makeBuilding(i,50,0);
+      }
+      makeBuilding(i,-50,0);
+      makeBuilding(50,i,0);
+      makeBuilding(-50,i,0);
+  }
+
+//makeBuilding(0,20,0);
 //コースの制御点が何たらかんたら
 const controlPoints = [
 [25,7,40],
@@ -227,9 +244,10 @@ scene.add(metalRobot);
 const headPosition = metalRobot.getObjectByName("head").position.clone();
 camera.position.set(headPosition.x, headPosition.y, headPosition.z-0.1);
 camera.lookAt(headPosition);
+
+return metalRobot;
 }
-const metalRobot = makemetalRobot();
-scene.add(metalRobot);
+
  //光源の設定
   
   const light = new THREE.DirectionalLight(0xffffff,2);
@@ -245,18 +263,79 @@ scene.add(metalRobot);
       part.module.resize();
     });
   }, false);
+  const metalRobot = makemetalRobot();
+  scene.add(metalRobot);
+  //ロボットの作成終
 
-  
+document.addEventListener( 'keydown', (event)=> {
+  switch ( event.key ) {
+    case "w":
+      keys.forward = true;
+      break;
+    case "a":
+      keys.left = true;
+      break;
+    case "s":
+      keys.backward = true;
+      break;
+    case "d":
+      keys.right = true;
+      break;
+  }
+}, false );
 
-
-
+// キーアップイベント設定
+document.addEventListener( 'keyup', (event)=> {
+  switch ( event.key ) {
+    case "w":
+      keys.forward = false;
+      break;
+    case "a":
+      keys.left = false;
+      break;
+    case "s":
+      keys.backward = false;
+      break;
+    case "d":
+      keys.right = false;
+      break;
+  }
+}, false );
 
   // 描画処理
 const clock = new THREE.Clock();
 const xwingPosition = new THREE.Vector3();
 const xwingTarget = new THREE.Vector3();
+const metalRobotTarget = new THREE.Vector3();
   // 描画関数
   function render() {
+    if(metalRobot){
+      const speed = 0.18;
+      const movement = new THREE.Vector3();
+      if (keys.forward) movement.z += speed;
+    if (keys.backward) movement.z -= speed;
+    if (keys.left) movement.x += speed;
+    if (keys.right) movement.x -= speed;
+    if(keys.forward||keys.backward||keys.left||keys.right){
+   metalRobotTarget.copy(metalRobot.position).add(movement);
+    metalRobot.lookAt(metalRobotTarget);
+    }
+    metalRobot.position.add(movement);
+  
+    const cameraOffset = new THREE.Vector3(0,100,-20);
+    const cameraPosition = metalRobot.position.clone().add(cameraOffset);
+    camera.position.copy(cameraPosition);
+    camera.lookAt(metalRobot.position);
+  }
+   /* const headPosition = new THREE.Vector3(
+      metalRobot.position.x,
+      metalRobot.position.y+5,
+      metalRobot.position.z
+    );
+    camera.position.copy(headPosition);
+    camera.rotation.copy(metalRobot.rotation); 
+    
+  }*/
     //xwingの位置と向き
     if(xwing){
     const elapsedTime = clock.getElapsedTime()/30;
@@ -267,6 +346,16 @@ const xwingTarget = new THREE.Vector3();
     }
     // カメラ制御の更新
     //orbitControls.update();
+    /*camera.position.set(
+      camera.position.x + 10,
+      camera.position.y + 10,
+      camera.position.z + 10
+    );
+    camera.lookAt(metalRobot.position);
+  }*/
+   
+    
+  
     // 座標軸の表示
     axes.visible = param.axes;
     // 描画
