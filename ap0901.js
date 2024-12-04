@@ -54,10 +54,14 @@ function init() {
 //カメラコントロール
  const orbitControls = new OrbitControls(camera,renderer.domElement);
 
+
+ const textureLoader = new THREE.TextureLoader();
+ const mapgazou = textureLoader.load("gazou.png");
 //平面の作成
-const planeGeometry = new THREE.PlaneGeometry(2000, 2000);
+const planeGeometry = new THREE.PlaneGeometry(200, 200);
   const planeMaterial = new THREE.MeshLambertMaterial({ color:0x90EE90});
   const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+ planeMaterial.map=mapgazou;
   plane.rotation.x = -0.5 * Math.PI;
   plane.receiveShadow = true;
   scene.add(plane)
@@ -110,13 +114,13 @@ function makeBuilding(x,z,type){
 }
 //makeBuilding(20,0,2);
 //makeBuilding(-20,0,2);
-for(let i =-50;i<50;i=i+5){
+for(let i =-100;i<100;i=i+5){
       if(i!=25||i!=30){
-      makeBuilding(i,50,0);
+      makeBuilding(i,100,0);
       }
-      makeBuilding(i,-50,0);
-      makeBuilding(50,i,0);
-      makeBuilding(-50,i,0);
+      makeBuilding(i,-100,0);
+      makeBuilding(100,i,0);
+      makeBuilding(-100,i,0);
   }
 
 //makeBuilding(0,20,0);
