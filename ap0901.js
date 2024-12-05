@@ -245,6 +245,7 @@ metalRobot.children.forEach((child) => {
 child.castShadow = true;
 child.receiveShadow = true;
 });
+metalRobot.position.set(-52,0,-89);
 scene.add(metalRobot);
 
 const headPosition = metalRobot.getObjectByName("head").position.clone();
@@ -257,7 +258,7 @@ return metalRobot;
  //光源の設定
   
   const light = new THREE.DirectionalLight(0xffffff,2);
-  light.position.set(3,6,8);
+  light.position.set(3,100,8);
   light.castShadow = true;
   scene.add(light);
   
