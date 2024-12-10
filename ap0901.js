@@ -18,11 +18,13 @@ function init() {
   // 制御変数の定義
   const param = {
     axes: true, // 座標軸
+    map:false,
   };
 
   // GUIコントローラの設定
   const gui = new GUI();
   gui.add(param, "axes").name("座標軸");
+  gui.add(param,"map").name("画像2");
 
   // シーン作成
   const scene = new THREE.Scene();
@@ -57,6 +59,7 @@ function init() {
 
  const textureLoader = new THREE.TextureLoader();
  const mapgazou = textureLoader.load("gazou2.jpeg");
+ const mapgazou2 = textureLoader.load("gazou3.jpeg");
  //mapgazou.repeat.x = -1;
  //mapgazou.offset.x = 1;
 //平面の作成
@@ -365,6 +368,11 @@ const metalRobotTarget = new THREE.Vector3();
   
     // 座標軸の表示
     axes.visible = param.axes;
+    if(param.map){
+      planeMaterial.map=mapgazou2;
+    }else{
+      planeMaterial.map=mapgazou;
+    }
     // 描画
     renderer.render(scene, camera);
     // 次のフレームでの描画要請
